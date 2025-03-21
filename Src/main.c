@@ -19,11 +19,18 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/*
+ * Defining Stack Size in RAM
+ */
 #define SRAM_START 0x20000000U
 #define SRAM_SIZE (128 * 1024)
 #define SRAM_END ( (SRAM_START) + (SRAM_SIZE) )
 #define STACK_START SRAM_END
 
+
+/*
+ * Defining Main Stack Pointer Size and Start of Process Stack Pointer
+ */
 #define STACK_MSP_START STACK_START
 #define STACK_MSP_END ((STACK_MSP_START) - 512);
 #define STACK_PSP_START = STACK_MSP_END
@@ -39,7 +46,7 @@ __attribute__((naked)) void change_sp_to_psp(void) {
 	__asm volatile ("LDR R0, =PSP_START");
 	__asm volatile ("MSR PSP, R0");
 	__asm volatile ("MOV R0, #0x02");
-	__asm volatile ("MSR CONTROL, R0");
+	__asm volatile ("MSR CONTROL, R0"); //Changes bit position of Control Register to use Process Stack Pointer
 }
 
 void generate_exception(void) {
@@ -49,14 +56,14 @@ void generate_exception(void) {
 
 int main(void)
 {
-	change_sp_to_psp();
+	change_sp_to_psp(); //Changes Stack Pointer from Main Stack Pointer to Process Stack Pointer
 
 	uint32_t ret;
 
 	ret = fun_add(1,4,5,3);
 	printf("%ld", ret);
     /* Loop forever */
-	generate_exception();
+	generate_exception(); //Generates SVC Handler exception to switch Processor to Handler Mode from Thread Mode
 
 	for(;;);
 }
